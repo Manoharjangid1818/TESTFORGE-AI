@@ -528,4 +528,182 @@ router.post('/qa/query', (req, res) => {
   }
 });
 
+/**
+ * ==================== QA MENTOR ENDPOINTS ====================
+ */
+
+/**
+ * POST /api/qa/mentor/teach
+ * Generate test cases WITH educational explanations for junior QA engineers
+ */
+router.post('/qa/mentor/teach', (req, res) => {
+  try {
+    const { feature, options = {} } = req.body;
+
+    if (!feature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Feature name is required'
+      });
+    }
+
+    const mentorContent = SmartQAAssistant.generateTeachingTestCases(feature, options);
+
+    res.json({
+      success: true,
+      message: `Generated ${mentorContent.testCases.length} test cases with educational explanations for ${feature}`,
+      data: mentorContent
+    });
+  } catch (error) {
+    console.error('TestForge: QA Mentor error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/qa/mentor/concepts
+ * Get testing concepts and best practices
+ */
+router.get('/qa/mentor/concepts', (req, res) => {
+  try {
+    const concepts = {
+      testTypes: {
+        'Positive Testing': 'Testing with valid inputs to verify correct behavior',
+        'Negative Testing': 'Testing with invalid inputs to verify error handling',
+        'Edge Case Testing': 'Testing boundary conditions and extreme values',
+        'Security Testing': 'Testing for vulnerabilities and malicious inputs',
+        'Performance Testing': 'Testing response times and resource usage'
+      },
+      testingTechniques: {
+        'Equivalence Partitioning': 'Divide inputs into groups that behave similarly',
+        'Boundary Value Analysis': 'Test at the edges of valid ranges',
+        'State Transition Testing': 'Test transitions between different states',
+        'Error Guessing': 'Use experience to predict likely bugs',
+        'Decision Table Testing': 'Test combinations of inputs and conditions'
+      },
+      bestPractices: [
+        'Write clear, descriptive test case names',
+        'Test one behavior per test case',
+        'Make test steps specific and reproducible',
+        'Always verify expected results',
+        'Test happy path, edge cases, and error cases',
+        'Test on multiple browsers and devices',
+        'Automate repetitive test cases',
+        'Keep test cases maintainable and organized'
+      ]
+    };
+
+    res.json({
+      success: true,
+      message: 'Retrieved QA testing concepts',
+      data: concepts
+    });
+  } catch (error) {
+    console.error('TestForge: QA Mentor error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/qa/mentor/guide/:feature
+ * Get detailed testing guide for a specific feature
+ */
+router.get('/qa/mentor/guide/:feature', (req, res) => {
+  try {
+    const { feature } = req.params;
+
+    if (!feature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Feature name is required'
+      });
+    }
+
+    const overview = SmartQAAssistant.getFeatureOverview(feature);
+    const strategy = SmartQAAssistant.getTestingStrategy(feature);
+    const edgeCases = SmartQAAssistant.suggestEdgeCases(feature);
+    const negativeCases = SmartQAAssistant.suggestNegativeCases(feature);
+    const mistakes = SmartQAAssistant.getCommonMistakes(feature);
+    const resources = SmartQAAssistant.getLearningResources(feature);
+
+    res.json({
+      success: true,
+      message: `Generated detailed testing guide for ${feature}`,
+      data: {
+        feature,
+        overview,
+        testingStrategy: strategy,
+        edgeCases,
+        negativeCases,
+        commonMistakes: mistakes,
+        learningResources: resources
+      }
+    });
+  } catch (error) {
+    console.error('TestForge: QA Mentor error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/qa/mentor/coverage-analysis
+ * Analyze test coverage and suggest improvements
+ */
+router.post('/api/qa/mentor/coverage-analysis', (req, res) => {
+  try {
+    const { feature, existingTestCount = 0 } = req.body;
+
+    if (!feature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Feature name is required'
+      });
+    }
+
+    const allTestCases = SmartQAAssistant.generateTestCases(feature, { complexity: 'high' });
+    const gaps = SmartQAAssistant.identifyCoverageGaps(feature, allTestCases);
+    const recommendations = SmartQAAssistant.getBestPractices(feature);
+
+    const analysis = {
+      feature,
+      totalSuggestedTests: allTestCases.length,
+      currentTestCount: existingTestCount,
+      coveragePercentage: existingTestCount > 0 
+        ? Math.round((existingTestCount / allTestCases.length) * 100) 
+        : 0,
+      gaps,
+      recommendations,
+      improvementSuggestions: [
+        existingTestCount === 0 
+          ? `Start with ${Math.ceil(allTestCases.length / 3)} core test cases covering happy path, validation, and error cases`
+          : `Add ${Math.max(1, allTestCases.length - existingTestCount)} more tests to improve coverage`,
+        gaps.length > 0 ? `Focus on missing areas: ${gaps.slice(0, 3).join(', ')}` : 'Coverage looks good!',
+        'Prioritize security and edge case testing',
+        'Automate repetitive test cases'
+      ]
+    };
+
+    res.json({
+      success: true,
+      message: 'Analyzed test coverage',
+      data: analysis
+    });
+  } catch (error) {
+    console.error('TestForge: QA Mentor error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 export default router;

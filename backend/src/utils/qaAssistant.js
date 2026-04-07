@@ -1065,6 +1065,539 @@ class SmartQAAssistant {
 
     return plan;
   }
+
+  /**
+   * Generate test cases WITH mentoring and educational explanations
+   * Perfect for teaching junior QA engineers
+   * @param {string} feature - Feature to teach about
+   * @param {object} options - Additional options
+   * @returns {object} Test cases with learning tips and explanations
+   */
+  static generateTeachingTestCases(feature, options = {}) {
+    const complexity = options.complexity || 'medium';
+    const testCases = this.generateTestCases(feature, { ...options, complexity });
+
+    // Generate comprehensive learning content
+    const mentorContent = this.generateMentorContent(feature, complexity, testCases);
+
+    return {
+      feature,
+      complexity,
+      totalTestCases: testCases.length,
+      testCases,
+      learningTips: mentorContent
+    };
+  }
+
+  /**
+   * Generate mentor content explaining test strategy
+   * @param {string} feature - Feature being tested
+   * @param {string} complexity - Complexity level
+   * @param {array} testCases - Generated test cases
+   * @returns {object} Comprehensive learning material
+   */
+  static generateMentorContent(feature, complexity, testCases) {
+    const content = {
+      overview: this.getFeatureOverview(feature),
+      testingStrategy: this.getTestingStrategy(feature),
+      eachStepExplanation: this.explainTestSteps(testCases),
+      edgeCases: this.suggestEdgeCases(feature),
+      negativeCases: this.suggestNegativeCases(feature),
+      coverageGaps: this.identifyCoverageGaps(feature, testCases),
+      bestPractices: this.getBestPractices(feature),
+      commonMistakes: this.getCommonMistakes(feature),
+      learningResources: this.getLearningResources(feature)
+    };
+
+    return content;
+  }
+
+  /**
+   * Provide overview of what the feature does and why it matters
+   */
+  static getFeatureOverview(feature) {
+    const overviews = {
+      'auth': {
+        title: 'Authentication (Login) Testing',
+        description: 'Authentication is the process of verifying a user\'s identity. It\'s critical because it controls access to the entire application.',
+        importance: 'Critical - Without proper auth testing, unauthorized users could gain access to sensitive data.',
+        whyItMatters: 'Every application needs secure login. A broken login can expose user accounts and data.'
+      },
+      'form': {
+        title: 'Form Validation & Submission Testing',
+        description: 'Forms are the primary way users interact with applications. Testing ensures data is correctly captured, validated, and processed.',
+        importance: 'High - Forms collect user data. Invalid data can cause errors in backend processing.',
+        whyItMatters: 'Poor form testing leads to invalid data, user frustration, and potential data corruption.'
+      },
+      'dashboard': {
+        title: 'Dashboard & UI Testing',
+        description: 'Dashboards display critical information to users. Testing ensures data is accurate, layouts are responsive, and interactions work.',
+        importance: 'High - Users rely on dashboards for key information.',
+        whyItMatters: 'A broken dashboard gives users wrong information and provides poor user experience.'
+      },
+      'navigation': {
+        title: 'Navigation & Menu Testing',
+        description: 'Navigation is how users move through the application. Testing ensures all links work and users can reach intended destinations.',
+        importance: 'High - Broken navigation prevents users from accessing features.',
+        whyItMatters: 'If users can\'t navigate, they can\'t use the application effectively.'
+      },
+      'search': {
+        title: 'Search & Filter Functionality Testing',
+        description: 'Search helps users find information quickly. Testing ensures results are accurate and filters work as expected.',
+        importance: 'Medium-High - Search quality affects user satisfaction.',
+        whyItMatters: 'Poor search leads to users not finding data and increased support requests.'
+      },
+      'upload': {
+        title: 'File Upload Testing',
+        description: 'File uploads allow users to submit documents, images, etc. Testing ensures files are processed correctly and securely.',
+        importance: 'High - Security risk if not tested properly.',
+        whyItMatters: 'Unvalidated uploads can lead to security vulnerabilities, virus uploads, or data corruption.'
+      },
+      'api': {
+        title: 'API Integration Testing',
+        description: 'APIs are the backbone of modern applications. Testing ensures endpoints return correct data and handle errors properly.',
+        importance: 'Critical - All application functionality depends on APIs.',
+        whyItMatters: 'Broken APIs break entire features. API testing is essential for application stability.'
+      }
+    };
+
+    return overviews[feature.toLowerCase()] || {
+      title: `${feature} Testing`,
+      description: `Testing the ${feature} feature to ensure it works as expected.`,
+      importance: 'Medium',
+      whyItMatters: `Proper testing of ${feature} ensures users have a good experience.`
+    };
+  }
+
+  /**
+   * Explain the overall testing strategy for a feature
+   */
+  static getTestingStrategy(feature) {
+    const features = feature.toLowerCase();
+    
+    const strategies = {
+      'auth': {
+        approach: 'Test authentication in layers: valid login, invalid inputs, security attacks',
+        layers: [
+          'Layer 1: Happy Path - User can login with valid credentials',
+          'Layer 2: Input Validation - System rejects invalid/empty inputs',
+          'Layer 3: Security - System prevents SQL injection, XSS, brute force',
+          'Layer 4: Account Management - Password reset, 2FA, session management'
+        ],
+        sequence: 'Always test happy path first, then validation, then security'
+      },
+      'form': {
+        approach: 'Test form in order: submission, validation, error handling, data processing',
+        layers: [
+          'Layer 1: Basic Submission - Form submits with valid data',
+          'Layer 2: Field Validation - Each field validates input correctly',
+          'Layer 3: Error Messages - Clear error messages for invalid input',
+          'Layer 4: Data Integrity - Submitted data is correct in database'
+        ],
+        sequence: 'Test each field individually, then combinations, then edge cases'
+      },
+      'dashboard': {
+        approach: 'Test dashboard data accuracy, responsiveness, and interactivity',
+        layers: [
+          'Layer 1: Page Load - Dashboard loads within acceptable time',
+          'Layer 2: Data Display - All data displays correctly and is current',
+          'Layer 3: Responsiveness - Layout works on all screen sizes',
+          'Layer 4: Interactivity - Charts, filters, and widgets respond to user actions'
+        ],
+        sequence: 'Test on multiple devices, verify data accuracy, check performance'
+      }
+    };
+
+    return strategies[features] || {
+      approach: `Develop a comprehensive testing strategy for ${feature}`,
+      layers: ['Test basic functionality', 'Test edge cases', 'Test error handling'],
+      sequence: 'Organize tests from basic to complex'
+    };
+  }
+
+  /**
+   * Explain WHY each test step is necessary
+   */
+  static explainTestSteps(testCases) {
+    const explanations = {};
+
+    testCases.forEach((testCase, idx) => {
+      explanations[testCase.testCaseId] = {
+        testName: testCase.title,
+        stepsWithReasoning: testCase.steps.map((step, stepIdx) => ({
+          stepNumber: stepIdx + 1,
+          action: step,
+          whyWeDoThis: this.explainStep(step, testCase.title),
+          whatWeCheckFor: this.getCheckPoint(step, testCase.title)
+        })),
+        overallReasoning: `Testing "${testCase.title}" ensures that ${this.getTestReasonings(testCase.title)}.`,
+        commonFailurePoints: this.getCommonFailures(testCase.title)
+      };
+    });
+
+    return explanations;
+  }
+
+  /**
+   * Explain why a specific test step is necessary
+   */
+  static explainStep(step, testName) {
+    const stepLower = step.toLowerCase();
+
+    if (stepLower.includes('navigate')) {
+      return 'We must first access the feature being tested. This verifies the page/feature is accessible.';
+    }
+    if (stepLower.includes('enter') || stepLower.includes('input')) {
+      return 'We input test data to simulate how real users interact with the feature.';
+    }
+    if (stepLower.includes('click') || stepLower.includes('submit')) {
+      return 'We trigger the action to execute the feature logic and observe the response.';
+    }
+    if (stepLower.includes('wait') || stepLower.includes('load')) {
+      return 'We allow time for the system to process the request. Some systems need time to fetch data or process requests.';
+    }
+    if (stepLower.includes('verify') || stepLower.includes('check') || stepLower.includes('observe')) {
+      return 'We validate that the system behved as expected. This step confirms the test result.';
+    }
+
+    return 'This step is necessary to move the test forward.';
+  }
+
+  /**
+   * Get what we check for in each step
+   */
+  static getCheckPoint(step, testName) {
+    const stepLower = step.toLowerCase();
+
+    if (stepLower.includes('navigate')) {
+      return 'Check: Page loads without errors, all elements are visible';
+    }
+    if (stepLower.includes('enter') || stepLower.includes('input')) {
+      return 'Check: Input field accepts the data, displays it correctly';
+    }
+    if (stepLower.includes('click') || stepLower.includes('submit')) {
+      return 'Check: Button is clickable, action is triggered, page responds';
+    }
+    if (stepLower.includes('wait') || stepLower.includes('load')) {
+      return 'Check: Page loads within acceptable time (usually < 3 seconds)';
+    }
+
+    return 'Check: Expected behavior occurs';
+  }
+
+  /**
+   * Get reasoning for test
+   */
+  static getTestReasonings(testName) {
+    const testLower = testName.toLowerCase();
+
+    if (testLower.includes('valid')) {
+      return 'the happy path works - users with correct data can successfully complete the action';
+    }
+    if (testLower.includes('invalid') || testLower.includes('empty')) {
+      return 'the system validates input and prevents invalid data from being processed';
+    }
+    if (testLower.includes('injection') || testLower.includes('xss') || testLower.includes('security')) {
+      return 'the system is protected from malicious attacks and injection attempts';
+    }
+    if (testLower.includes('responsive')) {
+      return 'the application works correctly on all device sizes and screen sizes';
+    }
+
+    return 'the feature works correctly';
+  }
+
+  /**
+   * Get common failure points for a test
+   */
+  static getCommonFailures(testName) {
+    const testLower = testName.toLowerCase();
+
+    if (testLower.includes('login') || testLower.includes('valid')) {
+      return [
+        'Button doesn\'t respond (JavaScript not loaded)',
+        'Error message displays instead of success',
+        'User is not actually logged in (token not created)',
+        'Page doesn\'t redirect after login'
+      ];
+    }
+    if (testLower.includes('empty') || testLower.includes('validation')) {
+      return [
+        'Form submits despite empty required field',
+        'Error message is unclear or missing',
+        'Wrong field is highlighted as the error',
+        'Error message disappears before user reads it'
+      ];
+    }
+
+    return [
+      'Feature doesn\'t work as expected',
+      'Inconsistent behavior across browsers',
+      'Performance is slower than acceptable'
+    ];
+  }
+
+  /**
+   * Suggest edge cases that should be tested
+   */
+  static suggestEdgeCases(feature) {
+    const edgeCases = {
+      'auth': [
+        'Username with special characters (@ . - _)',
+        'Extremely long password (1000+ characters)',
+        'Password with all special characters (!@#$%^&*)',
+        'Case sensitivity of username (TEST vs test)',
+        'Leading/trailing spaces in username or password',
+        'Username that is exactly at max length',
+        'Multiple login attempts in quick succession (rate limiting)'
+      ],
+      'form': [
+        'Form submitted without touching any field',
+        'Form submitted multiple times rapidly (double-click)',
+        'Form with all optional fields left empty',
+        'Input with maximum allowed characters',
+        'Input with unicode characters (emoji, Chinese, etc.)',
+        'Form submission while network is slow',
+        'Page refresh while form submission is in progress'
+      ],
+      'dashboard': [
+        'Dashboard with zero data to display',
+        'Dashboard with extremely large datasets (1M+ records)',
+        'Dashboard accessed by user with minimal permissions',
+        'Dashboard loading on a very slow network',
+        'Dashboard with extreme screen zoom (200%)',
+        'Simultaneous updates to dashboard data'
+      ],
+      'search': [
+        'Search with single character',
+        'Search with special characters only (!@#$%)',
+        'Search that matches nothing in database',
+        'Search with wildcard characters',
+        'Accented characters (é, ñ, ü)',
+        'Search with leading/trailing spaces',
+        'Very large search result set (10,000+ items)'
+      ],
+      'upload': [
+        'File with very long filename (255+ characters)',
+        'File with no extension',
+        'File with double extension (.jpg.exe)',
+        'File with special characters in name',
+        'Zero-byte file (empty file)',
+        'Uploading same file multiple times',
+        'Upload interrupted mid-process'
+      ]
+    };
+
+    return edgeCases[feature.toLowerCase()] || [
+      'Empty/zero state',
+      'Extreme values (very large, very small)',
+      'Special characters',
+      'Maximum allowed input',
+      'Boundary conditions'
+    ];
+  }
+
+  /**
+   * Suggest negative test cases
+   */
+  static suggestNegativeCases(feature) {
+    const negativeCases = {
+      'auth': [
+        'Login with non-existent user account',
+        'Login with correct username but wrong password (off by 1)',
+        'Login with SQL injection payload in password',
+        'Login with XSS payload in username',
+        'Account lockout after multiple failed attempts',
+        'Accessing protected page without logging in',
+        'Using expired session token',
+        'Logging in from multiple locations simultaneously'
+      ],
+      'form': [
+        'Submit form with negative numbers in age field',
+        'Submit form with HTML/script tags in text fields',
+        'Submit form with impossibly long email address',
+        'Submit past dates in date fields where future is required',
+        'Submit duplicate data (duplicate email in registration)',
+        'Submit form after navigating away and back',
+        'Submit form with fields auto-populated with wrong values'
+      ],
+      'dashboard': [
+        'Access dashboard without proper permissions',
+        'Dashboard with missing or corrupted data',
+        'Dashboard displaying cached data that is stale',
+        'Dashboard failing to load due to API timeout',
+        'Dashboard for deleted user account',
+        'Concurrent dashboard updates causing conflicts'
+      ],
+      'search': [
+        'Search returns irrelevant results',
+        'Search is case-sensitive when it shouldn\'t be',
+        'Search doesn\'t support phrase search (quoted strings)',
+        'Search filters don\'t work together (AND vs OR logic)',
+        'Pagination doesn\'t work correctly with search results',
+        'Search timeout on very complex queries'
+      ]
+    };
+
+    return negativeCases[feature.toLowerCase()] || [
+      'Invalid input',
+      'Missing required fields',
+      'Unauthorized access',
+      'System errors and timeouts'
+    ];
+  }
+
+  /**
+   * Identify gaps in test coverage
+   */
+  static identifyCoverageGaps(feature, testCases) {
+    const gaps = {
+      'auth': [
+        '❌ MISSING: Password reset flow (if applicable)',
+        '❌ MISSING: Two-factor authentication (if implemented)',
+        '❌ MISSING: Remember me / Keep me logged in functionality',
+        '❌ MISSING: Account lockout after failed attempts',
+        '❌ MISSING: Session expiration behavior',
+        '⚠️  WEAK: API response time testing (how long does login take)',
+        '⚠️  WEAK: Concurrent login attempts from different devices'
+      ],
+      'form': [
+        '❌ MISSING: File upload validation (if form includes upload)',
+        '❌ MISSING: Progress indication for large form submissions',
+        '❌ MISSING: Auto-save functionality (if implemented)',
+        '❌ MISSING: Form reset/clear button testing',
+        '⚠️  WEAK: Cross-browser form validation differences',
+        '⚠️  WEAK: Accessibility testing (keyboard navigation, screen readers)'
+      ],
+      'dashboard': [
+        '❌ MISSING: Real-time data update testing',
+        '❌ MISSING: Widget customization (if users can rearrange)',
+        '❌ MISSING: Export/Download data functionality',
+        '❌ MISSING: Dark mode / Light mode testing',
+        '⚠️  WEAK: Performance with large datasets',
+        '⚠️  WEAK: Accessibility compliance (WCAG standards)'
+      ]
+    };
+
+    return gaps[feature.toLowerCase()] || [
+      '❌ Edge cases may not be covered',
+      '❌ Security scenarios may be incomplete',
+      '⚠️  Performance testing may be weak',
+      '⚠️  Accessibility testing may be incomplete'
+    ];
+  }
+
+  /**
+   * Provide best practices for testing
+   */
+  static getBestPractices(feature) {
+    return {
+      general: [
+        '✅ Test one thing at a time - each test should verify one behavior',
+        '✅ Use descriptive test names - someone should understand what you\'re testing from the name',
+        '✅ Test happy path first, then edge cases, then negative cases',
+        '✅ Automate repetitive test cases - manual testing gets boring and error-prone',
+        '✅ Test on actual devices/browsers - emulators don\'t catch everything',
+        '✅ Test with real data - production data might have special cases'
+      ],
+      specific: {
+        'auth': [
+          '🔒 Always test security scenarios - this is a critical feature',
+          '🔒 Test password strength validation',
+          '🔒 Verify passwords are never logged or displayed in responses',
+          '🔒 Test HTTPS/SSL is enforced',
+          '🔒 Test rate limiting on failed attempts'
+        ],
+        'form': [
+          '✍️  Test field validation independently first',
+          '✍️  Then test validation combinations (e.g., first name + last name)',
+          '✍️  Test with minimum, typical, and maximum data lengths',
+          '✍️  Verify error messages are helpful and specific',
+          '✍️  Test form works after page refresh'
+        ],
+        'dashboard': [
+          '📊 Verify data accuracy - compare with source database',
+          '📊 Test with different user permission levels',
+          '📊 Test dashboard performance - measure load times',
+          '📊 Test responsiveness across all common screen sizes',
+          '📊 Verify no sensitive data is exposed'
+        ]
+      }
+    };
+  }
+
+  /**
+   * Explain common mistakes junior QA engineers make
+   */
+  static getCommonMistakes(feature) {
+    return [
+      {
+        mistake: '❌ Testing only the happy path',
+        explanation: 'Many junior QAs test only when everything goes right. But most bugs occur when things go WRONG.',
+        example: 'Only testing login with valid credentials, not testing with invalid passwords or empty fields.',
+        solution: '✅ Always test: valid input, invalid input, empty input, and malicious input'
+      },
+      {
+        mistake: '❌ Writing vague test steps',
+        explanation: 'Step like "Enter username" doesn\'t specify WHAT username to enter.',
+        example: 'Step says "Enter username" but doesn\'t say testuser@example.com',
+        solution: '✅ Always be specific: "Enter testuser@example.com in the username field"'
+      },
+      {
+        mistake: '❌ Not understanding the feature before testing',
+        explanation: 'You can\'t test what you don\'t understand. Understanding requirements is step 1.',
+        example: 'Testing age validation without knowing if system accepts negative numbers',
+        solution: '✅ Read requirements, ask questions, understand the feature first'
+      },
+      {
+        mistake: '❌ Assuming functionality works without verification',
+        explanation: 'Never assume - always verify. An action might appear to work but have side effects.',
+        example: 'Assuming password was changed without checking email confirmation was sent',
+        solution: '✅ Always verify all aspects: UI response, database state, emails sent, etc.'
+      },
+      {
+        mistake: '❌ Not testing edge cases',
+        explanation: 'Edge cases are where bugs hide. They\'re not obvious but they\'re critical.',
+        example: 'Not testing email with 100+ characters, missing the max length bug',
+        solution: '✅ Always think about boundaries, special characters, and extreme values'
+      },
+      {
+        mistake: '❌ Forgetting to test on various devices/browsers',
+        explanation: 'Features work differently on different browsers and devices.',
+        example: 'Tested on Chrome but form doesn\'t work on Firefox',
+        solution: '✅ Always test on multiple browsers (Chrome, Firefox, Safari, Edge) and devices'
+      }
+    ];
+  }
+
+  /**
+   * Provide learning resources for junior QA
+   */
+  static getLearningResources(feature) {
+    return {
+      concepts: [
+        '📚 Equivalence Partitioning - Dividing inputs into valid/invalid groups',
+        '📚 Boundary Value Analysis - Testing at the extremes of valid ranges',
+        '📚 State Transition Testing - Testing different states and transitions',
+        '📚 Error Guessing - Using experience to find likely bugs',
+        '📚 Cause-Effect Graphing - Understanding relationships between inputs'
+      ],
+      skills: [
+        '🎯 Create clear, reproducible test steps',
+        '🎯 Identify and document expected vs actual results',
+        '🎯 Write effective bug reports with steps to reproduce',
+        '🎯 Understand test types: positive, negative, edge cases',
+        '🎯 Design tests for different user roles and permissions'
+      ],
+      practice: [
+        '🏋️ Practice writing test cases for YOUR OWN projects',
+        '🏋️ Review test cases written by senior QA engineers',
+        '🏋️ Get feedback on your test design',
+        '🏋️ Join quality assurance communities and forums',
+        '🏋️ Take online courses on test case design'
+      ]
+    };
+  }
 }
 
 export default SmartQAAssistant;

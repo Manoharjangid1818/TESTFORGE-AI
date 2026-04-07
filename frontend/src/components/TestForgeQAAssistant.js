@@ -17,7 +17,7 @@ const TestForgeQAAssistant = () => {
   const [changedFiles, setChangedFiles] = useState('');
   const [supportedFeatures, setSupportedFeatures] = useState([]);
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/testforge';
 
   const fetchSupportedFeatures = async () => {
     try {
@@ -181,6 +181,40 @@ const TestForgeQAAssistant = () => {
     }
   };
 
+  const handleMentorTeaching = async () => {
+    setLoading(true);
+    setError('');
+    setResults(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/qa/mentor/teach`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          feature: selectedFeature,
+          options: { complexity }
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setResults({
+          type: 'mentor-teaching',
+          data: data.data
+        });
+      } else {
+        setError(data.error || 'Failed to generate teaching content');
+      }
+    } catch (error) {
+      setError('Error: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const exportToJSON = () => {
     if (results) {
       const element = document.createElement('a');
@@ -243,6 +277,12 @@ const TestForgeQAAssistant = () => {
           onClick={() => setActiveTab('query')}
         >
           Ask Assistant
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'mentor' ? 'active' : ''}`}
+          onClick={() => setActiveTab('mentor')}
+        >
+          👨‍🏫 Learn & Mentor
         </button>
       </div>
 
@@ -408,6 +448,77 @@ const TestForgeQAAssistant = () => {
                 disabled={loading}
               >
                 {loading ? 'Processing...' : 'Ask Assistant'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* QA Mentor/Learning Tab */}
+        {activeTab === 'mentor' && (
+          <div className="qa-tab-content">
+            <h2>👨‍🏫 QA Mentor - Learn While Testing</h2>
+            <p>Get comprehensive teaching material explaining WHY each test step is necessary, edge cases, and best practices</p>
+
+            <div className="qa-form">
+              <div className="form-group">
+                <label>Select Feature to Learn About:</label>
+                <select 
+                  value={selectedFeature} 
+                  onChange={(e) => setSelectedFeature(e.target.value)}
+                >
+                  {supportedFeatures.map(feature => (
+                    <option key={feature.id} value={feature.id}>
+                      {feature.name}
+                    </option>
+                  ))}
+                </select>
+                <small><em>
+                  Choose a feature to learn comprehensive testing strategies with detailed explanations
+                </em></small>
+              </div>
+
+              <div className="form-group">
+                <label>Learning Complexity Level:</label>
+                <div className="radio-group">
+                  <label>
+                    <input 
+                      type="radio" 
+                      name="mentor-complexity" 
+                      value="low" 
+                      checked={complexity === 'low'}
+                      onChange={(e) => setComplexity(e.target.value)}
+                    />
+                    👶 Beginner (Basic concepts)
+                  </label>
+                  <label>
+                    <input 
+                      type="radio" 
+                      name="mentor-complexity" 
+                      value="medium" 
+                      checked={complexity === 'medium'}
+                      onChange={(e) => setComplexity(e.target.value)}
+                    />
+                    👥 Intermediate (Standard coverage)
+                  </label>
+                  <label>
+                    <input 
+                      type="radio" 
+                      name="mentor-complexity" 
+                      value="high" 
+                      checked={complexity === 'high'}
+                      onChange={(e) => setComplexity(e.target.value)}
+                    />
+                    🚀 Advanced (Comprehensive with best practices)
+                  </label>
+                </div>
+              </div>
+
+              <button 
+                className="btn btn-primary" 
+                onClick={handleMentorTeaching}
+                disabled={loading}
+              >
+                {loading ? 'Generating Learning Material...' : '📚 Start Learning'}
               </button>
             </div>
           </div>
@@ -580,6 +691,188 @@ const TestForgeQAAssistant = () => {
                       <pre>{JSON.stringify(results.data.data, null, 2)}</pre>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {results.type === 'mentor-teaching' && (
+              <div className="mentor-teaching-results">
+                <h3>👨‍🏫 Complete QA Testing Guide</h3>
+                
+                {/* Overview Section */}
+                <div className="mentor-section">
+                  <h4>📖 Feature Overview</h4>
+                  <div className="feature-overview">
+                    <div className="overview-card">
+                      <strong>What is it?</strong>
+                      <p>{results.data.learningTips.overview.title}</p>
+                    </div>
+                    <div className="overview-card">
+                      <strong>Why it matters:</strong>
+                      <p>{results.data.learningTips.overview.whyItMatters}</p>
+                    </div>
+                    <div className="overview-card">
+                      <strong>Importance Level:</strong>
+                      <p className="importance-level">{results.data.learningTips.overview.importance}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Testing Strategy */}
+                <div className="mentor-section">
+                  <h4>🎯 Testing Strategy</h4>
+                  <p><strong>Approach:</strong> {results.data.learningTips.testingStrategy.approach}</p>
+                  <p><strong>Testing Layers:</strong></p>
+                  <ul>
+                    {results.data.learningTips.testingStrategy.layers && results.data.learningTips.testingStrategy.layers.map((layer, idx) => (
+                      <li key={idx}>{layer}</li>
+                    ))}
+                  </ul>
+                  <p><strong>Sequence:</strong> {results.data.learningTips.testingStrategy.sequence}</p>
+                </div>
+
+                {/* Test Cases with Explanation */}
+                <div className="mentor-section">
+                  <h4>📋 Test Cases (Learn Each One)</h4>
+                  {results.data.testCases && results.data.testCases.map((tc, idx) => (
+                    <div key={idx} className="mentor-test-case">
+                      <div className="tc-header">
+                        <h5>{tc.title}</h5>
+                        <span className={`tc-priority priority-${tc.priority.toLowerCase()}`}>
+                          {tc.priority}
+                        </span>
+                      </div>
+                      <p className="tc-description"><strong>Purpose:</strong> {tc.description}</p>
+
+                      {results.data.learningTips.eachStepExplanation && results.data.learningTips.eachStepExplanation[tc.testCaseId] && (
+                        <div className="step-explanation">
+                          <strong>Why This Test Is Important:</strong>
+                          <p>{results.data.learningTips.eachStepExplanation[tc.testCaseId].overallReasoning}</p>
+                          
+                          <strong>Steps & Why Each One Matters:</strong>
+                          <ol>
+                            {results.data.learningTips.eachStepExplanation[tc.testCaseId].stepsWithReasoning && results.data.learningTips.eachStepExplanation[tc.testCaseId].stepsWithReasoning.map((step, i) => (
+                              <li key={i}>
+                                <strong>{step.action}</strong>
+                                <div className="step-reasoning">
+                                  <span className="why">💡 Why: {step.whyWeDoThis}</span>
+                                  <span className="check">✓ Check: {step.whatWeCheckFor}</span>
+                                </div>
+                              </li>
+                            ))}
+                          </ol>
+
+                          <strong>Common Failure Points:</strong>
+                          <ul>
+                            {results.data.learningTips.eachStepExplanation[tc.testCaseId].commonFailurePoints && results.data.learningTips.eachStepExplanation[tc.testCaseId].commonFailurePoints.map((fp, i) => (
+                              <li key={i}>{fp}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Edge Cases */}
+                <div className="mentor-section">
+                  <h4>🔄 Edge Cases (Boundary Testing)</h4>
+                  <p className="section-description">These are unusual but valid scenarios you MUST test. This is where many bugs hide!</p>
+                  <ul className="edge-cases-list">
+                    {results.data.learningTips.edgeCases && results.data.learningTips.edgeCases.map((edge, idx) => (
+                      <li key={idx}>{edge}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Negative Cases */}
+                <div className="mentor-section">
+                  <h4>❌ Negative Test Cases (Error Handling)</h4>
+                  <p className="section-description">Test what happens when things go WRONG. This is critical for robust applications!</p>
+                  <ul className="negative-cases-list">
+                    {results.data.learningTips.negativeCases && results.data.learningTips.negativeCases.map((neg, idx) => (
+                      <li key={idx}>{neg}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Coverage Gaps */}
+                <div className="mentor-section coverage-gaps">
+                  <h4>⚠️  Test Coverage Gaps</h4>
+                  <p className="section-description">These are areas often missed by junior QA engineers:</p>
+                  <ul>
+                    {results.data.learningTips.coverageGaps && results.data.learningTips.coverageGaps.map((gap, idx) => (
+                      <li key={idx}>{gap}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Best Practices */}
+                <div className="mentor-section best-practices">
+                  <h4>✅ Best Practices</h4>
+                  <div className="best-practices-general">
+                    <strong>General Principles:</strong>
+                    <ul>
+                      {results.data.learningTips.bestPractices && results.data.learningTips.bestPractices.general && results.data.learningTips.bestPractices.general.map((practice, idx) => (
+                        <li key={idx}>{practice}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Common Mistakes */}
+                <div className="mentor-section common-mistakes">
+                  <h4>🚫 Common Mistakes Junior QA Makes</h4>
+                  <p className="section-description">Learn from others' mistakes!</p>
+                  {results.data.learningTips.commonMistakes && results.data.learningTips.commonMistakes.map((mistake, idx) => (
+                    <div key={idx} className="mistake-card">
+                      <h5>{mistake.mistake}</h5>
+                      <p><strong>Why this is a problem:</strong> {mistake.explanation}</p>
+                      <p><strong>Example:</strong> {mistake.example}</p>
+                      <p><strong>Solution:</strong> {mistake.solution}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Learning Resources */}
+                <div className="mentor-section learning-resources">
+                  <h4>📚 Learning Resources & Concepts</h4>
+                  <div className="resources-grid">
+                    {results.data.learningTips.learningResources && (
+                      <>
+                        <div className="resource-card">
+                          <h5>Testing Concepts to Know:</h5>
+                          <ul>
+                            {results.data.learningTips.learningResources.concepts && results.data.learningTips.learningResources.concepts.map((concept, idx) => (
+                              <li key={idx}>{concept}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="resource-card">
+                          <h5>QA Skills to Develop:</h5>
+                          <ul>
+                            {results.data.learningTips.learningResources.skills && results.data.learningTips.learningResources.skills.map((skill, idx) => (
+                              <li key={idx}>{skill}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="resource-card">
+                          <h5>Practice Exercises:</h5>
+                          <ul>
+                            {results.data.learningTips.learningResources.practice && results.data.learningTips.learningResources.practice.map((practice, idx) => (
+                              <li key={idx}>{practice}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="export-buttons">
+                  <button className="btn btn-secondary" onClick={exportToJSON}>
+                    📥 Export Complete Guide as JSON
+                  </button>
                 </div>
               </div>
             )}
