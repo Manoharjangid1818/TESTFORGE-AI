@@ -1,0 +1,150 @@
+.test-cases-container {
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.test-cases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.test-case-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  border-left: 4px solid;
+}
+
+.test-case-card.type-positive {
+  border-left-color: #6bcf7f;
+}
+
+.test-case-card.type-positive:hover {
+  box-shadow: 0 4px 12px rgba(107, 207, 127, 0.2);
+  border-color: #6bcf7f;
+}
+
+.test-case-card.type-negative {
+  border-left-color: #ff6b6b;
+}
+
+.test-case-card.type-negative:hover {
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+  border-color: #ff6b6b;
+}
+
+.test-case-card.type-edge\ case {
+  border-left-color: #667eea;
+}
+
+.test-case-card.type-edge\ case:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #2d3748;
+  flex: 1;
+}
+
+.type-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+.type-badge.positive {
+  background: #d4edda;
+  color: #155724;
+}
+
+.type-badge.negative {
+  background: #ffe0e0;
+  color: #ff6b6b;
+}
+
+.type-badge.edge\ case {
+  background: #e7f5ff;
+  color: #667eea;
+}
+
+.card-description {
+  color: #666;
+  font-size: 13px;
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.case-id {
+  font-family: monospace;
+  font-size: 12px;
+  color: #999;
+}
+
+.priority-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.priority-badge.critical {
+  background: #ffe0e0;
+  color: #ff6b6b;
+}
+
+.priority-badge.high {
+  background: #fff3cd;
+  color: #ff9800;
+}
+
+.priority-badge.medium {
+  background: #ffeaa7;
+  color: #ffc107;
+}
+
+.priority-badge.low {
+  background: #d4edda;
+  color: #6bcf7f;
+}
+
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+@media (max-width: 768px) {
+  .test-cases-container {
+    padding: 20px;
+  }
+
+  .test-cases-grid {
+    grid-template-columns: 1fr;
+  }
+}
