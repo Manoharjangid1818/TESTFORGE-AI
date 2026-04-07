@@ -6,6 +6,7 @@ import TestForgeBugReport from './components/TestForgeBugReport';
 import TestForgeTestCases from './components/TestForgeTestCases';
 import TestForgeExecutionLogs from './components/TestForgeExecutionLogs';
 import TestForgeScanHistory from './components/TestForgeScanHistory';
+import TestForgeQAAssistant from './components/TestForgeQAAssistant';
 import './App.css';
 
 function TestForgeApp() {
@@ -39,6 +40,8 @@ function TestForgeApp() {
         return <TestForgeExecutionLogs scan={currentScan} />;
       case 'history':
         return <TestForgeScanHistory scans={scanHistory} onSelectScan={handleScanSelect} />;
+      case 'qa':
+        return <TestForgeQAAssistant />;
       default:
         return <TestForgeDashboard scan={currentScan} />;
     }
@@ -123,6 +126,16 @@ function TestForgeApp() {
                 onClick={() => { setActiveTab('history'); setSidebarOpen(false); }}
               >
                 ⏱️ Scan History
+              </button>
+            </div>
+
+            <div className="nav-section">
+              <h3 className="nav-title">AI Assistant</h3>
+              <button
+                className={`nav-item ${activeTab === 'qa' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('qa'); setSidebarOpen(false); }}
+              >
+                🧪 QA Assistant
               </button>
             </div>
 

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import TestForgeQAScanner from '../utils/testforgeScanner.js';
 import TestForgeTestCaseGenerator from '../utils/testCaseGenerator.js';
 import TestForgeExportService from '../utils/exportService.js';
+import SmartQAAssistant from '../utils/qaAssistant.js';
 
 const router = express.Router();
 
@@ -261,6 +262,265 @@ router.delete('/scan/:scanId', (req, res) => {
     }
   } catch (error) {
     console.error('TestForge: Route error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * ==================== SMART QA ASSISTANT ENDPOINTS ====================
+ */
+
+/**
+ * POST /api/qa/generate-test-cases
+ * Generate test cases for a given feature
+ */
+router.post('/qa/generate-test-cases', (req, res) => {
+  try {
+    const { feature, options = {} } = req.body;
+
+    if (!feature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Feature name is required'
+      });
+    }
+
+    const testCases = SmartQAAssistant.generateTestCases(feature, options);
+    const executionPlan = SmartQAAssistant.generateExecutionPlan(testCases, options);
+
+    res.json({
+      success: true,
+      message: `Generated ${testCases.length} test cases for ${feature}`,
+      data: {
+        feature,
+        totalTestCases: testCases.length,
+        testCases,
+        executionPlan
+      }
+    });
+  } catch (error) {
+    console.error('TestForge: QA Assistant error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/qa/identify-bugs
+ * Identify potential bugs in an area of the application
+ */
+router.post('/qa/identify-bugs', (req, res) => {
+  try {
+    const { area, codeSnippets = [] } = req.body;
+
+    if (!area) {
+      return res.status(400).json({
+        success: false,
+        error: 'Application area is required'
+      });
+    }
+
+    const bugs = SmartQAAssistant.identifyPotentialBugs(area, codeSnippets);
+
+    res.json({
+      success: true,
+      message: `Identified ${bugs.length} potential issues in ${area}`,
+      data: {
+        area,
+        totalBugsFound: bugs.length,
+        criticlBugs: bugs.filter(b => b.severity === 'Critical').length,
+        highBugs: bugs.filter(b => b.severity === 'High').length,
+        mediumBugs: bugs.filter(b => b.severity === 'Medium').length,
+        bugs
+      }
+    });
+  } catch (error) {
+    console.error('TestForge: QA Assistant error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/qa/recommend-tests
+ * Recommend which tests to run based on changed files
+ */
+router.post('/qa/recommend-tests', (req, res) => {
+  try {
+    const { changedFiles = [], testCategories = [] } = req.body;
+
+    if (changedFiles.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one changed file is required'
+      });
+    }
+
+    const recommendations = SmartQAAssistant.recommendTestsForChanges(changedFiles, testCategories);
+
+    res.json({
+      success: true,
+      message: `Generated test recommendations for ${changedFiles.length} changed files`,
+      data: recommendations
+    });
+  } catch (error) {
+    console.error('TestForge: QA Assistant error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/qa/supported-features
+ * Get list of supported test case generation features
+ */
+router.get('/qa/supported-features', (req, res) => {
+  try {
+    const supportedFeatures = [
+      {
+        name: 'Authentication/Login',
+        id: 'auth',
+        description: 'Generate test cases for login and authentication flows'
+      },
+      {
+        name: 'Forms & Input Validation',
+        id: 'form',
+        description: 'Generate test cases for form submission and field validation'
+      },
+      {
+        name: 'Dashboard & UI',
+        id: 'dashboard',
+        description: 'Generate test cases for dashboard page layout and interactions'
+      },
+      {
+        name: 'Navigation',
+        id: 'navigation',
+        description: 'Generate test cases for menu and navigation flows'
+      },
+      {
+        name: 'Search & Filters',
+        id: 'search',
+        description: 'Generate test cases for search and filter functionality'
+      },
+      {
+        name: 'File Upload',
+        id: 'upload',
+        description: 'Generate test cases for file upload and handling'
+      },
+      {
+        name: 'API Integration',
+        id: 'api',
+        description: 'Generate test cases for API endpoints and integration'
+      },
+      {
+        name: 'Responsive Design',
+        id: 'responsive',
+        description: 'Generate test cases for responsive layout on different devices'
+      }
+    ];
+
+    res.json({
+      success: true,
+      message: 'Retrieved supported test case features',
+      data: {
+        totalFeatures: supportedFeatures.length,
+        features: supportedFeatures
+      }
+    });
+  } catch (error) {
+    console.error('TestForge: QA Assistant error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/qa/generate-execution-plan
+ * Generate test execution plan based on test cases
+ */
+router.post('/qa/generate-execution-plan', (req, res) => {
+  try {
+    const { testCases = [], options = {} } = req.body;
+
+    if (testCases.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Test cases array is required'
+      });
+    }
+
+    const executionPlan = SmartQAAssistant.generateExecutionPlan(testCases, options);
+
+    res.json({
+      success: true,
+      message: 'Generated test execution plan',
+      data: executionPlan
+    });
+  } catch (error) {
+    console.error('TestForge: QA Assistant error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/qa/query
+ * Natural language query handler for QA assistant
+ */
+router.post('/qa/query', (req, res) => {
+  try {
+    const { query } = req.body;
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: 'Query is required'
+      });
+    }
+
+    const queryLower = query.toLowerCase();
+    let response = {
+      success: true,
+      query,
+      response: 'Query processed'
+    };
+
+    // Parse natural language queries
+    if (queryLower.includes('generate test') || queryLower.includes('create test')) {
+      const featureMatch = query.match(/(?:for|on)\s+(\w+)/i);
+      const feature = featureMatch ? featureMatch[1] : 'general';
+      const testCases = SmartQAAssistant.generateTestCases(feature);
+      response.action = 'generate_test_cases';
+      response.data = { feature, testCases, totalGenerated: testCases.length };
+    } else if (queryLower.includes('find bug') || queryLower.includes('identify bug')) {
+      const areaMatch = query.match(/(?:in|on)\s+(\w+)/i);
+      const area = areaMatch ? areaMatch[1] : 'general';
+      const bugs = SmartQAAssistant.identifyPotentialBugs(area);
+      response.action = 'identify_bugs';
+      response.data = { area, bugs, totalFound: bugs.length };
+    } else if (queryLower.includes('which test') || queryLower.includes('recommend test')) {
+      response.action = 'recommend_tests';
+      response.message = 'Please provide list of changed files for test recommendations';
+    } else {
+      response.message = 'I can help you with: "Generate test cases for [feature]", "Find bugs in [area]", or "Recommend tests after changes"';
+    }
+
+    res.json(response);
+  } catch (error) {
+    console.error('TestForge: QA Assistant error:', error);
     res.status(500).json({
       success: false,
       error: error.message
