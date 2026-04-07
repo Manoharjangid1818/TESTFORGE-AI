@@ -19,11 +19,6 @@ const TestForgeQAAssistant = () => {
 
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-  // Fetch supported features on component mount
-  useEffect(() => {
-    fetchSupportedFeatures();
-  }, []);
-
   const fetchSupportedFeatures = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/qa/supported-features`);
@@ -35,6 +30,12 @@ const TestForgeQAAssistant = () => {
       console.error('Error fetching supported features:', error);
     }
   };
+
+  // Fetch supported features on component mount
+  useEffect(() => {
+    fetchSupportedFeatures();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGenerateTestCases = async () => {
     setLoading(true);
